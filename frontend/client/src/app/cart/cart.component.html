@@ -1,0 +1,38 @@
+<div class="content" role="main">
+  <div class="card highlight-card card-small">
+    <span>Jelenleg megvásárolható könyveink listája:</span>
+  </div>
+  <div *ngIf="cart !== null">
+    <ul style="list-style-type: none;">
+      <div style="border: 5px; border-color: black;">
+        <li *ngFor="let x of cart.items">
+          <h2>{{x.title}}</h2>
+          <h3>{{x.author}}</h3>
+          <h4>{{x.ISBN}}</h4>
+          <h5>{{x.desciption}}</h5>
+          <div>
+            <div>
+              <div>
+                <div>{{x.price}}</div>
+              </div>
+            </div>
+          </div>
+        </li>
+      </div>
+    </ul>
+    <div>
+      <h2>Teljes összeg: {{cart.total}}</h2>
+    </div>
+  </div>
+  <div>
+    <button [routerLink]="['/getBooks']">Vissza a könyvekhez!</button>
+  </div>
+  <div>
+    <button (click)="payForBooks()">Let me pay for these!</button>
+  </div>
+  <div>
+    <button [routerLink]="['/login']">Logout</button>
+  </div>
+</div>
+
+<router-outlet></router-outlet>

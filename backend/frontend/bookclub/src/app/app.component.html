@@ -1,0 +1,17 @@
+<h2>Bookclub</h2>
+
+<input id="title" placeholder="Title"><br/>
+<input id="author" placeholder="Author"><br/>
+<input id="year" placeholder="Year"><br/>
+<input id="genre" placeholder="Genre"><br/>
+<input id="publisher" placeholder="Publisher"><br/>
+<button (click)="addBook()">Add Book</button>
+
+<h3 *ngFor="let book of books">
+  <b>{{book.title}}</b><br/>
+  <b>{{book.author}}</b><br/>
+  <b>{{book.year}}</b><br/>
+  <b>{{book.genre}}</b><br/>
+  <b>{{book.publisher}}</b><br/>
+  <button (click)="deleteBook(book.id)">Delete Book</button>
+</h3>

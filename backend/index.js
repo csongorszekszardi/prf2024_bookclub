@@ -1,10 +1,12 @@
 var Express = require('express');
 var MongoClient = require('mongodb').MongoClient;
 var cors = require('cors');
-//const multer = require('multer');
+var bcrypt = require('bcrypt');
+var bodyParser = require('body-parser');
 
 var app = Express();
 app.use(cors());
+app.use(bodyParser.json());
 
 var CONNECTION_STRING = "mongodb+srv://admin:abcd1234@cluster0.8qlw42m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -60,4 +62,36 @@ app.put('/api/bookclub/EditBook', Express.json(), (request, response) => {
         { $set: updatedBook },
     );
     response.json("Book updated successfully");
+})
+
+app.post('/api/bookclub/Register', (request, response) => {
+    const { username, password } = request.body;
+    
+    if (!username || !password) {
+        return response.status(400).json("Username and password are required");
+    }
+
+    database.collection("users").findOne({ username: username }, (error, user) => {
+        if (user) {
+            return response.status(400).json("User already exists");
+        }
+
+        bcrypt.hash(password, 10, (err, hash) => {
+            if (err) {
+                return response.status(500).json("Error hashing password");
+            }
+
+            database.collection("users").insertOne({
+                username: username,
+                password: hash,
+                isAdmin: 0
+            }, (error, result) => {
+                if (error) {
+                    return response.status(500).json("Error registering user");
+                }
+
+                response.json("User registered successfully");
+            });
+        });
+    });
 })

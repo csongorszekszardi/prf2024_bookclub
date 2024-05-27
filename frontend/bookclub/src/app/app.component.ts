@@ -61,4 +61,15 @@ export class AppComponent {
     this.refreshBooks();
   }
 
+  registerUser() {
+    var newUser = {
+      username: (<HTMLInputElement>document.getElementById('reg-username')).value,
+      password: (<HTMLInputElement>document.getElementById('reg-password')).value
+    };
+
+    this.http.post(this.APIUrl+'Register', newUser).subscribe(data => {
+      alert(data);
+    });
+  }
+
 }

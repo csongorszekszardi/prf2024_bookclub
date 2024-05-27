@@ -9,6 +9,8 @@ import { HttpClient } from '@angular/common/http';
 export class AppComponent {
   title = 'bookclub';
   readonly APIUrl = 'http://localhost:5002/api/bookclub/';
+  loggedIn: boolean = false;
+  isAdmin: boolean = false;
 
   constructor(private http: HttpClient) {}
 
@@ -20,8 +22,17 @@ export class AppComponent {
     });
   }
 
+  checkSession() {
+    this.http.get(this.APIUrl + 'checkSession', { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        this.loggedIn = data.loggedIn;
+      }
+    });
+  }
+
   ngOnInit() {
     this.refreshBooks();
+    //this.checkSession();
   }
 
   addBook() {
@@ -69,6 +80,35 @@ export class AppComponent {
 
     this.http.post(this.APIUrl+'Register', newUser).subscribe(data => {
       alert(data);
+    });
+  }
+
+  loginUser() {
+    const loginUser = {
+      username: (<HTMLInputElement>document.getElementById('login-username')).value,
+      password: (<HTMLInputElement>document.getElementById('login-password')).value
+    };
+
+    this.http.post(this.APIUrl + 'Login', loginUser, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert('Login successful');
+        this.loggedIn = true;
+        this.isAdmin = data.isAdmin;
+        this.refreshBooks();
+      }, error: () => {
+        this.loggedIn = false;
+        alert('Login failed');
+      }
+    });
+  }
+
+  logoutUser() {
+    this.http.post(this.APIUrl + 'Logout', {}, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.loggedIn = false;
+        this.isAdmin = false;
+      }
     });
   }
 

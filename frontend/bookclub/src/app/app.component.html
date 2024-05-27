@@ -1,19 +1,42 @@
 <h2>Bookclub</h2>
 
-<h3>Register</h3>
-<input id="reg-username" placeholder="Username"><br/>
-<input id="reg-password" type="password" placeholder="Password"><br/>
-<button (click)="registerUser()">Register</button>
+<div *ngIf="!loggedIn">
+  <h3>Register</h3>
+  <input id="reg-username" placeholder="Username"><br/>
+  <input id="reg-password" type="password" placeholder="Password"><br/>
+  <button (click)="registerUser()">Register</button>
+</div>
 
 <br/>
 <br/>
 
-<input id="title" placeholder="Title"><br/>
-<input id="author" placeholder="Author"><br/>
-<input id="year" placeholder="Year"><br/>
-<input id="genre" placeholder="Genre"><br/>
-<input id="publisher" placeholder="Publisher"><br/>
-<button (click)="addBook()">Add Book</button>
+
+<div *ngIf="!loggedIn">
+  <h3>Login</h3>
+  <input id="login-username" placeholder="Username"><br/>
+  <input id="login-password" type="password" placeholder="Password"><br/>
+  <button (click)="loginUser()">Login</button>
+</div>
+
+
+<br/>
+<br/>
+
+<button *ngIf="loggedIn" (click)="logoutUser()">Logout</button>
+
+<br/>
+<br/>
+
+<h3>Books</h3>
+<div *ngIf="isAdmin">
+  <input id="title" placeholder="Title"><br/>
+  <input id="author" placeholder="Author"><br/>
+  <input id="year" placeholder="Year"><br/>
+  <input id="genre" placeholder="Genre"><br/>
+  <input id="publisher" placeholder="Publisher"><br/>
+  <button (click)="addBook()">Add Book</button>
+</div>
+
 
 <h3 *ngFor="let book of books">
   <div *ngIf="!book.editing">

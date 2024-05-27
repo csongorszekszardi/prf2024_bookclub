@@ -3,10 +3,20 @@ var MongoClient = require('mongodb').MongoClient;
 var cors = require('cors');
 var bcrypt = require('bcrypt');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 var app = Express();
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:4200',
+    credentials: true
+}));
 app.use(bodyParser.json());
+app.use(session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+  }));
 
 var CONNECTION_STRING = "mongodb+srv://admin:abcd1234@cluster0.8qlw42m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -73,8 +83,8 @@ app.post('/api/bookclub/Register', (request, response) => {
 
     database.collection("users").findOne({ username: username }, (error, user) => {
         if (user) {
-            return response.status(400).json("User already exists");
-        }
+             return response.status(400).json("User already exists");
+       }
 
         bcrypt.hash(password, 10, (err, hash) => {
             if (err) {
@@ -94,4 +104,34 @@ app.post('/api/bookclub/Register', (request, response) => {
             });
         });
     });
+})
+
+app.post('/api/bookclub/Login', (request, response) => {
+    const { username, password } = request.body;
+
+    database.collection("users").findOne({ username: username }, (error, user) => {
+        if (!user) {
+            return response.status(400).json("User not found");
+        }
+
+        bcrypt.compare(password, user.password, (err, result) => {
+            if (result) {
+                request.session.user = {
+                    username: user.username,
+                    isAdmin: user.isAdmin
+                };
+                response.json({
+                    message: "Login successful",
+                    isAdmin: user.isAdmin
+                });
+            } else {
+                response.status(400).json("Invalid credentials");
+            }
+        });
+    });
+})
+
+app.post('/api/bookclub/Logout', (request, response) => {
+    request.session.destroy();
+    response.json("Logout successful");
 })

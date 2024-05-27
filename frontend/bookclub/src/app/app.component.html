@@ -8,10 +8,22 @@
 <button (click)="addBook()">Add Book</button>
 
 <h3 *ngFor="let book of books">
-  <b>{{book.title}}</b><br/>
-  <b>{{book.author}}</b><br/>
-  <b>{{book.year}}</b><br/>
-  <b>{{book.genre}}</b><br/>
-  <b>{{book.publisher}}</b><br/>
-  <button (click)="deleteBook(book.id)">Delete Book</button>
+  <div *ngIf="!book.editing">
+    <b>{{book.title}}</b><br/>
+    <b>{{book.author}}</b><br/>
+    <b>{{book.year}}</b><br/>
+    <b>{{book.genre}}</b><br/>
+    <b>{{book.publisher}}</b><br/>
+    <button (click)="editBook(book)">Edit Book</button>
+    <button (click)="deleteBook(book.id)">Delete Book</button>
+  </div>
+  <div *ngIf="book.editing">
+    <input [(ngModel)]="book.title" placeholder="Title"><br/>
+    <input [(ngModel)]="book.author" placeholder="Author"><br/>
+    <input [(ngModel)]="book.year" placeholder="Year"><br/>
+    <input [(ngModel)]="book.genre" placeholder="Genre"><br/>
+    <input [(ngModel)]="book.publisher" placeholder="Publisher"><br/>
+    <button (click)="cancelEdit(book)">Cancel Editing</button>
+    <button (click)="saveBook(book)">Save</button>
+  </div>
 </h3>

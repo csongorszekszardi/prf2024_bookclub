@@ -44,4 +44,21 @@ export class AppComponent {
       this.refreshBooks();
     });
   }
+
+  saveBook(book:any) {
+    this.http.put(this.APIUrl+'EditBook', book).subscribe(data => {
+      alert(data);
+      this.refreshBooks();
+    });
+  }
+
+  editBook(book:any) {
+    book.editing = true;
+  }
+
+  cancelEdit(book:any) {
+    book.editing = false;
+    this.refreshBooks();
+  }
+
 }

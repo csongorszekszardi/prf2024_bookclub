@@ -1,7 +1,7 @@
 var Express = require('express');
 var MongoClient = require('mongodb').MongoClient;
 var cors = require('cors');
-const multer = require('multer');
+//const multer = require('multer');
 
 var app = Express();
 app.use(cors());
@@ -20,14 +20,14 @@ app.listen(5002,()=>{
 })
 
 app.get('/api/bookclub/GetBooks', (request, response)=>{
-    database.collection("bookclubcollection").find({}).toArray((error, result)=>{
+    database.collection("books").find({}).toArray((error, result)=>{
         response.send(result);
     });
 })
 
-app.post('/api/bookclub/AddBook', Express.json(), (request, response)=>{//multer().none()
-    database.collection("bookclubcollection").count({}, function(error, numOfDocs){
-        database.collection("bookclubcollection").insertOne({
+app.post('/api/bookclub/AddBook', Express.json(), (request, response)=>{
+    database.collection("books").count({}, function(error, numOfDocs){
+        database.collection("books").insertOne({
             id: (numOfDocs+1).toString(),
             title: request.body.title,
             author: request.body.author,
@@ -40,8 +40,24 @@ app.post('/api/bookclub/AddBook', Express.json(), (request, response)=>{//multer
 })
 
 app.delete('/api/bookclub/DeleteBook', (request, response)=>{
-    database.collection("bookclubcollection").deleteOne({
+    database.collection("books").deleteOne({
         id: request.query.id
     });
     response.json("Book deleted successfully");
+})
+
+app.put('/api/bookclub/EditBook', Express.json(), (request, response) => {
+    const bookId = request.body.id;
+    const updatedBook = {
+        title: request.body.title,
+        author: request.body.author,
+        year: request.body.year,
+        genre: request.body.genre,
+        publisher: request.body.publisher
+    };
+    database.collection("books").updateOne(
+        { id: bookId },
+        { $set: updatedBook },
+    );
+    response.json("Book updated successfully");
 })

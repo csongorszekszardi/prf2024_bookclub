@@ -1,15 +1,12 @@
 <h2>Bookclub</h2>
 
+<button *ngIf="loggedIn" (click)="logoutUser()">Logout</button>
 <div *ngIf="!loggedIn">
   <h3>Register</h3>
   <input id="reg-username" placeholder="Username"><br/>
   <input id="reg-password" type="password" placeholder="Password"><br/>
   <button (click)="registerUser()">Register</button>
 </div>
-
-<br/>
-<br/>
-
 
 <div *ngIf="!loggedIn">
   <h3>Login</h3>
@@ -18,43 +15,47 @@
   <button (click)="loginUser()">Login</button>
 </div>
 
+<br *ngIf="!loggedIn"/><br *ngIf="!loggedIn"/>
 
-<br/>
-<br/>
+<div *ngIf="loggedIn && bookOfMonth">
+  <h3>Book of the Month</h3>
+  <b>{{ bookOfMonth.title }}</b><br/>
+  <b>{{ bookOfMonth.author }}</b><br/>
+  <b>{{ bookOfMonth.year }}</b><br/>
+  <b>{{ bookOfMonth.genre }}</b><br/>
+  <b>{{ bookOfMonth.publisher }}</b><br/>
+</div>
 
-<button *ngIf="loggedIn" (click)="logoutUser()">Logout</button>
-
-<br/>
-<br/>
-
-<h3>Books</h3>
 <div *ngIf="isAdmin">
+  <h3>Books</h3>
+
   <input id="title" placeholder="Title"><br/>
   <input id="author" placeholder="Author"><br/>
   <input id="year" placeholder="Year"><br/>
   <input id="genre" placeholder="Genre"><br/>
   <input id="publisher" placeholder="Publisher"><br/>
   <button (click)="addBook()">Add Book</button>
+
+  <h4 *ngFor="let book of books">
+    <div *ngIf="!book.editing">
+      <b>{{book.title}}</b><br/>
+      <b>{{book.author}}</b><br/>
+      <b>{{book.year}}</b><br/>
+      <b>{{book.genre}}</b><br/>
+      <b>{{book.publisher}}</b><br/>
+      <button (click)="editBook(book)">Edit Book</button>
+      <button (click)="deleteBook(book.id)">Delete Book</button>
+      <br/>
+      <input type="radio" name="bookOfMonth" [checked]="book.bookOfMonth === 1" (click)="setBookOfMonth(book.id)"> Set as Book of the Month<br/>
+    </div>
+    <div *ngIf="book.editing">
+      <input [(ngModel)]="book.title" placeholder="Title"><br/>
+      <input [(ngModel)]="book.author" placeholder="Author"><br/>
+      <input [(ngModel)]="book.year" placeholder="Year"><br/>
+      <input [(ngModel)]="book.genre" placeholder="Genre"><br/>
+      <input [(ngModel)]="book.publisher" placeholder="Publisher"><br/>
+      <button (click)="cancelEdit(book)">Cancel Editing</button>
+      <button (click)="saveBook(book)">Save</button>
+    </div>
+  </h4>
 </div>
-
-
-<h3 *ngFor="let book of books">
-  <div *ngIf="!book.editing">
-    <b>{{book.title}}</b><br/>
-    <b>{{book.author}}</b><br/>
-    <b>{{book.year}}</b><br/>
-    <b>{{book.genre}}</b><br/>
-    <b>{{book.publisher}}</b><br/>
-    <button (click)="editBook(book)">Edit Book</button>
-    <button (click)="deleteBook(book.id)">Delete Book</button>
-  </div>
-  <div *ngIf="book.editing">
-    <input [(ngModel)]="book.title" placeholder="Title"><br/>
-    <input [(ngModel)]="book.author" placeholder="Author"><br/>
-    <input [(ngModel)]="book.year" placeholder="Year"><br/>
-    <input [(ngModel)]="book.genre" placeholder="Genre"><br/>
-    <input [(ngModel)]="book.publisher" placeholder="Publisher"><br/>
-    <button (click)="cancelEdit(book)">Cancel Editing</button>
-    <button (click)="saveBook(book)">Save</button>
-  </div>
-</h3>

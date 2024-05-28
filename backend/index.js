@@ -27,7 +27,7 @@ var database;
 app.listen(5002,()=>{
     MongoClient.connect(CONNECTION_STRING, (error, client)=>{
         database=client.db(DATABASE_NAME);
-        console.log("Connected to "+DATABASE_NAME+" database");
+        console.log("Connected to " + DATABASE_NAME + " database");
     });
 })
 
@@ -65,7 +65,8 @@ app.put('/api/bookclub/EditBook', Express.json(), (request, response) => {
         author: request.body.author,
         year: request.body.year,
         genre: request.body.genre,
-        publisher: request.body.publisher
+        publisher: request.body.publisher,
+        bookOfMonth: 0
     };
     database.collection("books").updateOne(
         { id: bookId },
@@ -134,4 +135,31 @@ app.post('/api/bookclub/Login', (request, response) => {
 app.post('/api/bookclub/Logout', (request, response) => {
     request.session.destroy();
     response.json("Logout successful");
+})
+
+app.post('/api/bookclub/SetBookOfMonth', Express.json(), (request, response) => {
+    const { bookId } = request.body;
+
+    database.collection("books").updateMany({}, { $set: { bookOfMonth: 0 } }, (error, result) => {
+        if (error) {
+            return response.status(500).json("Failed to reset books");
+        }
+
+        database.collection("books").updateOne({ id: bookId }, { $set: { bookOfMonth: 1 } }, (err, res) => {
+            if (err) {
+                return response.status(500).json("Failed to set book of month");
+            }
+
+            response.json("Book of the month set successfully");
+        });
+    });
+})
+
+app.get('/api/bookclub/GetBookOfMonth', (request, response) => {
+    database.collection("books").findOne({ bookOfMonth: 1 }, (error, result) => {
+        if (error || !result) {
+            return response.status(404).json("No book of the month found");
+        }
+        response.json(result);
+    });
 })

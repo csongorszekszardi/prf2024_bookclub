@@ -16,23 +16,17 @@ export class AppComponent {
 
   books:any = [];
 
+  bookOfMonth: any = null;
+
   refreshBooks() {
     this.http.get(this.APIUrl+'GetBooks').subscribe(data => {
       this.books = data;
     });
   }
 
-  checkSession() {
-    this.http.get(this.APIUrl + 'checkSession', { withCredentials: true }).subscribe({
-      next: (data: any) => {
-        this.loggedIn = data.loggedIn;
-      }
-    });
-  }
-
   ngOnInit() {
     this.refreshBooks();
-    //this.checkSession();
+    this.getBookOfMonth();
   }
 
   addBook() {
@@ -49,7 +43,7 @@ export class AppComponent {
     });
   }
 
-  deleteBook(id:any) {
+  deleteBook(id:string) {
     this.http.delete(this.APIUrl+'DeleteBook?id='+id).subscribe(data => {
       alert(data);
       this.refreshBooks();
@@ -112,4 +106,29 @@ export class AppComponent {
     });
   }
 
+  getBookOfMonth() {
+    this.http.get(this.APIUrl + 'GetBookOfMonth', { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        this.bookOfMonth = data;
+      },
+      error: (error: any) => {
+        if (error.status === 404) {
+          this.bookOfMonth = null;
+        }
+      }
+    });
+  }
+
+  setBookOfMonth(bookId:string) {
+    this.http.post(this.APIUrl + 'SetBookOfMonth', { bookId }, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.getBookOfMonth();
+        this.refreshBooks();
+      },
+      error: (error: any) => {
+        alert('Failed to set book of the month');
+      }
+    });
+  }
 }

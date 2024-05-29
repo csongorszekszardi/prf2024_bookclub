@@ -94,7 +94,7 @@ app.post('/api/bookclub/Register', (request, response) => {
 
     database.collection("users").findOne({ username: username }, (error, user) => {
         if (user) {
-             return response.status(400).json("User already exists");
+            return response.status(400).json("User already exists");
        }
 
         bcrypt.hash(password, 10, (err, hash) => {
@@ -252,5 +252,66 @@ app.delete('/api/bookclub/DeleteBookClub', (request, response) => {
             return response.status(500).json("Failed to delete book club");
         }
         response.json("Book club deleted successfully");
+    });
+})
+
+app.post('/api/bookclub/JoinBookClub', Express.json(), (request, response) => {
+    if (!request.session.user) {
+        return response.status(403).json("Access denied");
+    }
+
+    const username = request.session.user.username;
+    const clubId = request.body.clubId;
+
+    database.collection("memberships").insertOne({
+        clubId: clubId,
+        username: username,
+        joinedAt: new Date()
+    }, (error, result) => {
+        if (error) {
+            return response.status(500).json("Error joining club");
+        }
+
+        database.collection("memberships").countDocuments({ clubId: clubId }, (err, count) => {
+            if (err) {
+                return response.status(500).json("Error counting members");
+            }
+            
+            database.collection("clubs").updateOne(
+                { id: clubId },
+                { $set: {membersCount : count} },
+            );
+            response.json("Joined club successfully");
+        });
+    });
+})
+
+app.post('/api/bookclub/LeaveBookClub', Express.json(), (request, response) => {
+    if (!request.session.user) {
+        return response.status(403).json("Access denied");
+    }
+
+    const username = request.session.user.username;
+    const clubId = request.body.clubId;
+
+    database.collection("memberships").deleteOne({
+        clubId: clubId,
+        username: username
+    }, (error, result) => {
+        if (error) {
+            return response.status(500).json("Error leaving club");
+        }
+
+        database.collection("memberships").countDocuments({ clubId: clubId }, (err, count) => {
+            if (err) {
+                return response.status(500).json("Error counting members");
+            }
+            
+            database.collection("clubs").updateOne(
+                { id: clubId },
+                { $set: { membersCount: count } },
+            );
+            response.json("Left club successfully");
+        });
     });
 })

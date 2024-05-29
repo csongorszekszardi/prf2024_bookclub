@@ -20,6 +20,8 @@ export class AppComponent {
   
   clubs:any = [];
 
+  memberships: any = [];
+
   ngOnInit() {
     this.refreshBooks();
     this.checkSession();
@@ -225,4 +227,49 @@ export class AppComponent {
     });
   }
 
+  joinBookClub(clubId: string) {
+    this.http.post(this.APIUrl + 'JoinBookClub', { clubId }, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.refreshBookClubs();
+      },
+      error: (error: any) => {
+        alert('Failed to join club');
+      }
+    });
+  }
+
+  leaveBookClub(clubId: string) {
+    this.http.post(this.APIUrl + 'LeaveBookClub', { clubId }, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.refreshMemberships();
+      },
+      error: (error: any) => {
+        alert('Failed to leave club');
+      }
+    });
+  }
+
+  refreshMemberships() {
+    this.http.get<any[]>(this.APIUrl + 'GetUserMemberships', { withCredentials: true }).subscribe({
+      next: (data: any[]) => {
+        this.memberships = data;
+        this.checkMemberships();
+      },
+      error: (error: any) => {
+        alert('Failed to fetch memberships');
+      }
+    });
+  }
+
+  isMember(clubId: string): boolean {
+    return this.memberships.some((membership: any) => membership.clubId === clubId);
+  }
+
+  checkMemberships() {
+    this.clubs.forEach((club: any) => {
+      club.isMember = this.isMember(club.id);
+    });
+  }
 }

@@ -26,21 +26,27 @@
   <b>{{ bookOfMonth.publisher }}</b><br/>
 </div>
 
-<div *ngIf="isAdmin">
+<div *ngIf="loggedIn">
 
   <h3>Clubs</h3>
 
-  <h4>Add new book club</h4>
-  <input id="clubName" placeholder="Name"><br/>
-  <button (click)="addBookClub()">Add Club</button>
+  <div *ngIf="isAdmin">
+    <h4>Add new book club</h4>
+    <input id="clubName" placeholder="Name"><br/>
+    <button (click)="addBookClub()">Add Club</button>
+  </div>
 
   <h4 *ngFor="let club of clubs">
-    <div>
-      <b>{{ club.name }}</b> (Members: {{ club.members }})<br/>
-      <button (click)="editBookClub(club.id)">Edit</button>
-      <button (click)="deleteBookClub(club.id)">Delete</button>
-    </div>
+    <b>{{ club.name }}</b> (Members: {{ club.membersCount }})<br/>
+    <button *ngIf="isAdmin" (click)="editBookClub(club.id)">Edit</button>
+    <button *ngIf="isAdmin" (click)="deleteBookClub(club.id)">Delete</button>
+    <button *ngIf="!isAdmin && !club.isMember" (click)="joinBookClub(club.id)">Join Club</button>
+    <button *ngIf="!isAdmin && club.isMember" (click)="leaveBookClub(club.id)">Leave Club</button>
   </h4>
+
+</div>
+
+<div *ngIf="isAdmin">
 
   <h3>Books</h3>
 

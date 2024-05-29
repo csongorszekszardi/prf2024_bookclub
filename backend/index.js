@@ -16,7 +16,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }
-  }));
+}));
 
 var CONNECTION_STRING = "mongodb+srv://admin:abcd1234@cluster0.8qlw42m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -38,6 +38,7 @@ app.get('/api/bookclub/GetBooks', (request, response)=>{
 })
 
 app.post('/api/bookclub/AddBook', Express.json(), (request, response)=>{
+
     database.collection("books").count({}, function(error, numOfDocs){
         database.collection("books").insertOne({
             id: (numOfDocs+1).toString(),
@@ -46,19 +47,17 @@ app.post('/api/bookclub/AddBook', Express.json(), (request, response)=>{
             year: request.body.year,
             genre: request.body.genre,
             publisher: request.body.publisher
+        }, (error, result) => {
+            if (error) {
+                return response.status(500).json("Failed to create book");
+            }
+            response.json("Book added successfully");
         });
-        response.json("Book added successfully");
     });
-})
-
-app.delete('/api/bookclub/DeleteBook', (request, response)=>{
-    database.collection("books").deleteOne({
-        id: request.query.id
-    });
-    response.json("Book deleted successfully");
 })
 
 app.put('/api/bookclub/EditBook', Express.json(), (request, response) => {
+
     const bookId = request.body.id;
     const updatedBook = {
         title: request.body.title,
@@ -73,6 +72,17 @@ app.put('/api/bookclub/EditBook', Express.json(), (request, response) => {
         { $set: updatedBook },
     );
     response.json("Book updated successfully");
+})
+
+app.delete('/api/bookclub/DeleteBook', (request, response)=>{
+    if (!request.session.user || !request.session.user.isAdmin) {
+        return response.status(403).json("Access denied");
+    }
+
+    database.collection("books").deleteOne({
+        id: request.query.id
+    });
+    response.json("Book deleted successfully");
 })
 
 app.post('/api/bookclub/Register', (request, response) => {
@@ -132,12 +142,24 @@ app.post('/api/bookclub/Login', (request, response) => {
     });
 })
 
+app.get('/api/bookclub/CheckSession', (request, response) => {
+    if (request.session.user) {
+        response.json(request.session.user);
+    } else {
+        response.status(401).json("Not logged in");
+    }
+})
+
 app.post('/api/bookclub/Logout', (request, response) => {
     request.session.destroy();
     response.json("Logout successful");
 })
 
 app.post('/api/bookclub/SetBookOfMonth', Express.json(), (request, response) => {
+    if (!request.session.user || !request.session.user.isAdmin) {
+        return response.status(403).json("Access denied");
+    }
+
     const { bookId } = request.body;
 
     database.collection("books").updateMany({}, { $set: { bookOfMonth: 0 } }, (error, result) => {
@@ -161,5 +183,74 @@ app.get('/api/bookclub/GetBookOfMonth', (request, response) => {
             return response.status(404).json("No book of the month found");
         }
         response.json(result);
+    });
+})
+
+app.get('/api/bookclub/GetBookClubs', (request, response) => {
+    database.collection("clubs").find({}).toArray((error, result) => {
+        if (error) {
+            return response.status(500).json("Failed to fetch book clubs");
+        }
+        response.send(result);
+    });
+})
+
+app.post('/api/bookclub/CreateBookClub', Express.json(), (request, response) => {
+    if (!request.session.user || !request.session.user.isAdmin) {
+        return response.status(403).json("Access denied");
+    }
+
+    const clubName = request.body.name;
+
+    if (!clubName) {
+        return response.status(400).json("Name is required");
+    }
+
+    database.collection("clubs").count({}, function(error, numOfDocs){
+        database.collection("clubs").insertOne({
+            id: (numOfDocs+1).toString(),
+            name: clubName,
+            members: 0
+        }, (error, result) => {
+            if (error) {
+                return response.status(500).json("Failed to create book club");
+            }
+            response.json("Book club created successfully");
+        });
+    });
+})
+
+app.put('/api/bookclub/EditBookClub', Express.json(), (request, response) => {
+    if (!request.session.user || !request.session.user.isAdmin) {
+        return response.status(403).json("Access denied");
+    }
+
+    const clubId = request.body.clubId;
+    const clubName = request.body.clubName;
+
+    database.collection("clubs").updateOne(
+        { id: clubId },
+        { $set: { name: clubName } },
+        (error, result) => {
+            if (error) {
+                return response.status(500).json("Error updating book club");
+            }
+            response.json("Book club updated successfully");
+        }
+    );
+})
+
+app.delete('/api/bookclub/DeleteBookClub', (request, response) => {
+    if (!request.session.user || !request.session.user.isAdmin) {
+        return response.status(403).json("Access denied");
+    }
+
+    const clubId = request.query.id;
+
+    database.collection("clubs").deleteOne({ id: clubId }, (error, result) => {
+        if (error) {
+            return response.status(500).json("Failed to delete book club");
+        }
+        response.json("Book club deleted successfully");
     });
 })

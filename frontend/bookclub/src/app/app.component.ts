@@ -17,16 +17,40 @@ export class AppComponent {
   books:any = [];
 
   bookOfMonth: any = null;
-
-  refreshBooks() {
-    this.http.get(this.APIUrl+'GetBooks').subscribe(data => {
-      this.books = data;
-    });
-  }
+  
+  clubs:any = [];
 
   ngOnInit() {
     this.refreshBooks();
+    this.checkSession();
     this.getBookOfMonth();
+    this.refreshBookClubs();
+  }
+
+  refreshBooks() {
+    this.http.get<any[]>(this.APIUrl+'GetBooks', { withCredentials: true }).subscribe({
+      next: (data: any[]) => {
+        this.books = data;
+      },
+      error: (error: any) => {
+        if (error.status === 401) {
+          alert('Unauthorized. Please log in.');
+        }
+      }
+    });
+  }
+
+  getBookOfMonth() {
+    this.http.get(this.APIUrl + 'GetBookOfMonth', { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        this.bookOfMonth = data;
+      },
+      error: (error: any) => {
+        if (error.status === 404) {
+          this.bookOfMonth = null;
+        }
+      }
+    });
   }
 
   addBook() {
@@ -44,16 +68,26 @@ export class AppComponent {
   }
 
   deleteBook(id:string) {
-    this.http.delete(this.APIUrl+'DeleteBook?id='+id).subscribe(data => {
-      alert(data);
-      this.refreshBooks();
+    this.http.delete(this.APIUrl+'DeleteBook?id=' + id, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.refreshBooks();
+      },
+      error: (error: any) => {
+        alert('Failed to delete book');
+      }
     });
   }
 
   saveBook(book:any) {
-    this.http.put(this.APIUrl+'EditBook', book).subscribe(data => {
-      alert(data);
-      this.refreshBooks();
+    this.http.put(this.APIUrl+'EditBook', book).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.refreshBooks();
+      },
+      error: (error: any) => {
+        alert('Failed to delete book');
+      }
     });
   }
 
@@ -72,8 +106,13 @@ export class AppComponent {
       password: (<HTMLInputElement>document.getElementById('reg-password')).value
     };
 
-    this.http.post(this.APIUrl+'Register', newUser).subscribe(data => {
-      alert(data);
+    this.http.post(this.APIUrl+'Register', newUser).subscribe({
+      next: (data: any) => {
+        alert(data);
+      },
+      error: (error: any) => {
+        alert('Failed to delete book');
+      }
     });
   }
 
@@ -89,9 +128,23 @@ export class AppComponent {
         this.loggedIn = true;
         this.isAdmin = data.isAdmin;
         this.refreshBooks();
-      }, error: () => {
+      },
+      error: () => {
         this.loggedIn = false;
         alert('Login failed');
+      }
+    });
+  }
+
+  checkSession() {
+    this.http.get(this.APIUrl + 'CheckSession', { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        this.loggedIn = true;
+        this.isAdmin = data.isAdmin;
+      },
+      error: () => {
+        this.loggedIn = false;
+        this.isAdmin = false;
       }
     });
   }
@@ -102,19 +155,6 @@ export class AppComponent {
         alert(data);
         this.loggedIn = false;
         this.isAdmin = false;
-      }
-    });
-  }
-
-  getBookOfMonth() {
-    this.http.get(this.APIUrl + 'GetBookOfMonth', { withCredentials: true }).subscribe({
-      next: (data: any) => {
-        this.bookOfMonth = data;
-      },
-      error: (error: any) => {
-        if (error.status === 404) {
-          this.bookOfMonth = null;
-        }
       }
     });
   }
@@ -131,4 +171,58 @@ export class AppComponent {
       }
     });
   }
+
+  refreshBookClubs() {
+    this.http.get<any[]>(this.APIUrl + 'GetBookClubs', { withCredentials: true }).subscribe({
+      next: (data: any[]) => {
+        this.clubs = data;
+      },
+      error: (error: any) => {
+        alert('Failed to fetch book clubs');
+      }
+    });
+  }
+
+  addBookClub() {
+    const name = (<HTMLInputElement>document.getElementById('clubName')).value;
+
+    this.http.post(this.APIUrl + 'CreateBookClub', { name }, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.refreshBookClubs();
+      },
+      error: (error: any) => {
+        alert('Failed to create book club');
+      }
+    });
+  }
+
+  editBookClub(id:string) {
+    const name = prompt("Enter new name for the book club:");
+
+    if (name) {
+      this.http.put(this.APIUrl + 'EditBookClub', { clubId: id, clubName: name }, { withCredentials: true }).subscribe({
+        next: (data: any) => {
+          alert(data);
+          this.refreshBookClubs();
+        },
+        error: (error: any) => {
+          alert('Failed to update book club');
+        }
+      });
+    }
+  }
+
+  deleteBookClub(id:string) {
+    this.http.delete(this.APIUrl + 'DeleteBookClub?id=' + id, { withCredentials: true }).subscribe({
+      next: (data: any) => {
+        alert(data);
+        this.refreshBookClubs();
+      },
+      error: (error: any) => {
+        alert('Failed to delete book club');
+      }
+    });
+  }
+
 }

@@ -27,8 +27,24 @@
 </div>
 
 <div *ngIf="isAdmin">
+
+  <h3>Clubs</h3>
+
+  <h4>Add new book club</h4>
+  <input id="clubName" placeholder="Name"><br/>
+  <button (click)="addBookClub()">Add Club</button>
+
+  <h4 *ngFor="let club of clubs">
+    <div>
+      <b>{{ club.name }}</b> (Members: {{ club.members }})<br/>
+      <button (click)="editBookClub(club.id)">Edit</button>
+      <button (click)="deleteBookClub(club.id)">Delete</button>
+    </div>
+  </h4>
+
   <h3>Books</h3>
 
+  <h4>Add new book</h4>
   <input id="title" placeholder="Title"><br/>
   <input id="author" placeholder="Author"><br/>
   <input id="year" placeholder="Year"><br/>

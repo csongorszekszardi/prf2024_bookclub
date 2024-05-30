@@ -24,6 +24,16 @@ var DATABASE_NAME = "bookclubdb";
 
 var database;
 
+let memberships = [];
+
+const authenticate = (req, res, next) => {
+    if (req.session.user) {
+      next();
+    } else {
+      res.status(401).send('Unauthorized');
+    }
+};
+
 app.listen(5002,()=>{
     MongoClient.connect(CONNECTION_STRING, (error, client)=>{
         database=client.db(DATABASE_NAME);
@@ -89,17 +99,17 @@ app.post('/api/bookclub/Register', (request, response) => {
     const { username, password } = request.body;
     
     if (!username || !password) {
-        return response.status(400).json("Username and password are required");
+        return response.status(400).json({ message: "Username and password are required" });
     }
 
     database.collection("users").findOne({ username: username }, (error, user) => {
         if (user) {
-            return response.status(400).json("User already exists");
+            return response.status(400).json({ message: "Username already exists" });
        }
 
         bcrypt.hash(password, 10, (err, hash) => {
             if (err) {
-                return response.status(500).json("Error hashing password");
+                return response.status(500).json({ message: "Error hashing password" });
             }
 
             database.collection("users").insertOne({
@@ -108,7 +118,7 @@ app.post('/api/bookclub/Register', (request, response) => {
                 isAdmin: 0
             }, (error, result) => {
                 if (error) {
-                    return response.status(500).json("Error registering user");
+                    return response.status(500).json({ message: "Error registering user" });
                 }
 
                 response.json("User registered successfully");
@@ -122,7 +132,7 @@ app.post('/api/bookclub/Login', (request, response) => {
 
     database.collection("users").findOne({ username: username }, (error, user) => {
         if (!user) {
-            return response.status(400).json("User not found");
+            return response.status(400).json({ message: "User not found" });
         }
 
         bcrypt.compare(password, user.password, (err, result) => {
@@ -136,7 +146,7 @@ app.post('/api/bookclub/Login', (request, response) => {
                     isAdmin: user.isAdmin
                 });
             } else {
-                response.status(400).json("Invalid credentials");
+                response.status(400).json({ message: "Invalid credentials" });
             }
         });
     });
@@ -146,7 +156,7 @@ app.get('/api/bookclub/CheckSession', (request, response) => {
     if (request.session.user) {
         response.json(request.session.user);
     } else {
-        response.status(401).json("Not logged in");
+        response.status(401).json({ message: "Not logged in" });
     }
 })
 
@@ -157,19 +167,19 @@ app.post('/api/bookclub/Logout', (request, response) => {
 
 app.post('/api/bookclub/SetBookOfMonth', Express.json(), (request, response) => {
     if (!request.session.user || !request.session.user.isAdmin) {
-        return response.status(403).json("Access denied");
+        return response.status(403).json({ message: "Access denied" });
     }
 
     const { bookId } = request.body;
 
     database.collection("books").updateMany({}, { $set: { bookOfMonth: 0 } }, (error, result) => {
         if (error) {
-            return response.status(500).json("Failed to reset books");
+            return response.status(500).json({ message: "Failed to reset books" });
         }
 
         database.collection("books").updateOne({ id: bookId }, { $set: { bookOfMonth: 1 } }, (err, res) => {
             if (err) {
-                return response.status(500).json("Failed to set book of month");
+                return response.status(500).json({ message: "Failed to set book of month" });
             }
 
             response.json("Book of the month set successfully");
@@ -180,7 +190,7 @@ app.post('/api/bookclub/SetBookOfMonth', Express.json(), (request, response) => 
 app.get('/api/bookclub/GetBookOfMonth', (request, response) => {
     database.collection("books").findOne({ bookOfMonth: 1 }, (error, result) => {
         if (error || !result) {
-            return response.status(404).json("No book of the month found");
+            return response.status(404).json({ message: "No book of the month found" });
         }
         response.json(result);
     });
@@ -189,7 +199,7 @@ app.get('/api/bookclub/GetBookOfMonth', (request, response) => {
 app.get('/api/bookclub/GetBookClubs', (request, response) => {
     database.collection("clubs").find({}).toArray((error, result) => {
         if (error) {
-            return response.status(500).json("Failed to fetch book clubs");
+            return response.status(500).json({ message: "Failed to fetch book clubs" });
         }
         response.send(result);
     });
@@ -197,23 +207,23 @@ app.get('/api/bookclub/GetBookClubs', (request, response) => {
 
 app.post('/api/bookclub/CreateBookClub', Express.json(), (request, response) => {
     if (!request.session.user || !request.session.user.isAdmin) {
-        return response.status(403).json("Access denied");
+        return response.status(403).json({ message: "Access denied" });
     }
 
     const clubName = request.body.name;
 
     if (!clubName) {
-        return response.status(400).json("Name is required");
+        return response.status(400).json({ message: "Name is required" });
     }
 
     database.collection("clubs").count({}, function(error, numOfDocs){
         database.collection("clubs").insertOne({
             id: (numOfDocs+1).toString(),
             name: clubName,
-            members: 0
+            membersCount: 0
         }, (error, result) => {
             if (error) {
-                return response.status(500).json("Failed to create book club");
+                return response.status(500).json({ message: "Failed to create book club" });
             }
             response.json("Book club created successfully");
         });
@@ -222,7 +232,7 @@ app.post('/api/bookclub/CreateBookClub', Express.json(), (request, response) => 
 
 app.put('/api/bookclub/EditBookClub', Express.json(), (request, response) => {
     if (!request.session.user || !request.session.user.isAdmin) {
-        return response.status(403).json("Access denied");
+        return response.status(403).json({ message: "Access denied" });
     }
 
     const clubId = request.body.clubId;
@@ -233,7 +243,7 @@ app.put('/api/bookclub/EditBookClub', Express.json(), (request, response) => {
         { $set: { name: clubName } },
         (error, result) => {
             if (error) {
-                return response.status(500).json("Error updating book club");
+                return response.status(500).json({ message: "Error updating book club" });
             }
             response.json("Book club updated successfully");
         }
@@ -242,14 +252,14 @@ app.put('/api/bookclub/EditBookClub', Express.json(), (request, response) => {
 
 app.delete('/api/bookclub/DeleteBookClub', (request, response) => {
     if (!request.session.user || !request.session.user.isAdmin) {
-        return response.status(403).json("Access denied");
+        return response.status(403).json({ message: "Access denied" });
     }
 
     const clubId = request.query.id;
 
     database.collection("clubs").deleteOne({ id: clubId }, (error, result) => {
         if (error) {
-            return response.status(500).json("Failed to delete book club");
+            return response.status(500).json({ message: "Failed to delete book club" });
         }
         response.json("Book club deleted successfully");
     });
@@ -257,7 +267,7 @@ app.delete('/api/bookclub/DeleteBookClub', (request, response) => {
 
 app.post('/api/bookclub/JoinBookClub', Express.json(), (request, response) => {
     if (!request.session.user) {
-        return response.status(403).json("Access denied");
+        return response.status(403).json({ message: "Access denied" });
     }
 
     const username = request.session.user.username;
@@ -269,12 +279,12 @@ app.post('/api/bookclub/JoinBookClub', Express.json(), (request, response) => {
         joinedAt: new Date()
     }, (error, result) => {
         if (error) {
-            return response.status(500).json("Error joining club");
+            return response.status(500).json({ message: "Error joining club" });
         }
 
         database.collection("memberships").countDocuments({ clubId: clubId }, (err, count) => {
             if (err) {
-                return response.status(500).json("Error counting members");
+                return response.status(500).json({ message: "Error counting members" });
             }
             
             database.collection("clubs").updateOne(
@@ -288,7 +298,7 @@ app.post('/api/bookclub/JoinBookClub', Express.json(), (request, response) => {
 
 app.post('/api/bookclub/LeaveBookClub', Express.json(), (request, response) => {
     if (!request.session.user) {
-        return response.status(403).json("Access denied");
+        return response.status(403).json({ message: "Access denied" });
     }
 
     const username = request.session.user.username;
@@ -299,12 +309,12 @@ app.post('/api/bookclub/LeaveBookClub', Express.json(), (request, response) => {
         username: username
     }, (error, result) => {
         if (error) {
-            return response.status(500).json("Error leaving club");
+            return response.status(500).json({ message: "Error leaving club" });
         }
 
         database.collection("memberships").countDocuments({ clubId: clubId }, (err, count) => {
             if (err) {
-                return response.status(500).json("Error counting members");
+                return response.status(500).json({ message: "Error counting members" });
             }
             
             database.collection("clubs").updateOne(
@@ -314,4 +324,10 @@ app.post('/api/bookclub/LeaveBookClub', Express.json(), (request, response) => {
             response.json("Left club successfully");
         });
     });
+})
+
+app.get('/api/bookclub/GetUserMemberships', authenticate, (req, res) => {
+    const userId = req.session.user.id;
+    const userMemberships = memberships.filter(membership => membership.userId === userId);
+    res.json(userMemberships);
 })

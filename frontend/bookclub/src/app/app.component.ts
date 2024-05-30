@@ -113,7 +113,11 @@ export class AppComponent {
         alert(data);
       },
       error: (error: any) => {
-        alert('Failed to delete book');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to register user');
+        }
       }
     });
   }
@@ -131,9 +135,13 @@ export class AppComponent {
         this.isAdmin = data.isAdmin;
         this.refreshBooks();
       },
-      error: () => {
+      error: (error: any) => {
         this.loggedIn = false;
-        alert('Login failed');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Login failed');
+        }
       }
     });
   }
@@ -144,9 +152,12 @@ export class AppComponent {
         this.loggedIn = true;
         this.isAdmin = data.isAdmin;
       },
-      error: () => {
+      error: (error: any) => {
         this.loggedIn = false;
         this.isAdmin = false;
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        }
       }
     });
   }
@@ -157,6 +168,11 @@ export class AppComponent {
         alert(data);
         this.loggedIn = false;
         this.isAdmin = false;
+      },
+      error: (error: any) => {
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        }
       }
     });
   }
@@ -169,7 +185,11 @@ export class AppComponent {
         this.refreshBooks();
       },
       error: (error: any) => {
-        alert('Failed to set book of the month');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to set book of the month');
+        }
       }
     });
   }
@@ -180,7 +200,11 @@ export class AppComponent {
         this.clubs = data;
       },
       error: (error: any) => {
-        alert('Failed to fetch book clubs');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to fetch book clubs');
+        }
       }
     });
   }
@@ -194,7 +218,11 @@ export class AppComponent {
         this.refreshBookClubs();
       },
       error: (error: any) => {
-        alert('Failed to create book club');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to create book club');
+        }
       }
     });
   }
@@ -209,7 +237,11 @@ export class AppComponent {
           this.refreshBookClubs();
         },
         error: (error: any) => {
-          alert('Failed to update book club');
+          if (error.status === 400 || error.status === 500) {
+            alert(error.error.message);
+          } else {
+            alert('Failed to update book club');
+          }
         }
       });
     }
@@ -222,7 +254,11 @@ export class AppComponent {
         this.refreshBookClubs();
       },
       error: (error: any) => {
-        alert('Failed to delete book club');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to delete book club');
+        }
       }
     });
   }
@@ -231,10 +267,15 @@ export class AppComponent {
     this.http.post(this.APIUrl + 'JoinBookClub', { clubId }, { withCredentials: true }).subscribe({
       next: (data: any) => {
         alert(data);
+        this.refreshMemberships();
         this.refreshBookClubs();
       },
       error: (error: any) => {
-        alert('Failed to join club');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to join club');
+        }
       }
     });
   }
@@ -244,9 +285,14 @@ export class AppComponent {
       next: (data: any) => {
         alert(data);
         this.refreshMemberships();
+        this.refreshBookClubs();
       },
       error: (error: any) => {
-        alert('Failed to leave club');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to leave club');
+        }
       }
     });
   }
@@ -258,18 +304,18 @@ export class AppComponent {
         this.checkMemberships();
       },
       error: (error: any) => {
-        alert('Failed to fetch memberships');
+        if (error.status === 400 || error.status === 500) {
+          alert(error.error.message);
+        } else {
+          alert('Failed to fetch memberships');
+        }
       }
     });
   }
 
-  isMember(clubId: string): boolean {
-    return this.memberships.some((membership: any) => membership.clubId === clubId);
-  }
-
   checkMemberships() {
     this.clubs.forEach((club: any) => {
-      club.isMember = this.isMember(club.id);
+      club.isMember = this.memberships.some((membership: any) => membership.clubId === club.id);
     });
   }
 }
